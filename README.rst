@@ -27,7 +27,18 @@ and return an access token.
     from salesforce_bulk import SalesforceBulk
     bulk = SalesforceBulk(username=username,password=password)
 
-Alternatively if you run have access to a session ID and instance\_url
+To perform bulk jobs on a sandbox, maybe also using a login security token, you
+can do so like:
+
+.. code-block:: python
+
+    from salesforce_bulk import SalesforceBulk
+    bulk = SalesforceBulk(username=username,
+                          password=password,
+                          token=security_token,
+                          sandbox=True)
+
+Alternatively if you have access to a session ID and instance\_url
 you can use those directly:
 
 .. code-block:: python
