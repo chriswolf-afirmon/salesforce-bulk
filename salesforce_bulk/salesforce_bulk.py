@@ -72,6 +72,7 @@ HttpErrorMessage = "Bulk API HTTP Error result: {message}".format
 class SalesforceBulk(object):
 
     def __init__(self, sessionId=None, host=None, username=None, password=None,
+                 token=None, sandbox=False,
                  exception_class=BulkApiError, API_version="36.0"):
         if not sessionId and not username:
             raise RuntimeError(IncompleteCredentialsMessage())
@@ -79,9 +80,11 @@ class SalesforceBulk(object):
         if not sessionId:
             sessionId, endpoint = SalesforceBulk.login_to_salesforce(
                 username,
-                password
+                password,
+                token,
+                sandbox
             )
-            host = urlparse.urlparse(endpoint)
+            host = urlparse(endpoint)
             host = host.hostname.replace("-api", "")
 
         if host[0:8] == 'https://':
@@ -100,7 +103,7 @@ class SalesforceBulk(object):
         self.exception_class = exception_class
 
     @staticmethod
-    def login_to_salesforce(username, password):
+    def login_to_salesforce(username, password, token, sandbox):
         env_vars = (
             'SALESFORCE_CLIENT_ID',
             'SALESFORCE_CLIENT_SECRET',
@@ -121,11 +124,13 @@ class SalesforceBulk(object):
                 MissingDependencyMessage(dependency='salesforce-oauth-request-yplan')
             )
 
-        packet = salesforce_oauth_request.login(
-            username=username,
-            password=password
-        )
-        return packet['access_token'], packet['instance_url']
+        response = salesforce_oauth_request.login(
+            username=username, password=password, token=token, sandbox=sandbox)
+            
+        if not 'access_token' in response:
+            self.raise_error(str(response), resp.status)
+                  
+        return response['access_token'], response['instance_url']
 
     def get_headers(self, values={}):
         default = {
